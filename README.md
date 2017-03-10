@@ -13,6 +13,7 @@ Log into your MyAnimeList by clicking on the Mimi icon and sign in.  After signi
 Sites currently supported are:
 
 * Batoto
+* KissManga
 
 ## Disclaimer ##
 
