@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Mimi",
+  "version": "1",
+
+  "description": "Update your MyAnimeList account's manga list automatically.",
+  "icons": { "128" : "res/images/mimi.png"},
+
+  "content_scripts": [
+    {
+      "matches": ["*://bato.to/reader*"],
+      "js": ["lib/jquery/jquery-3.1.1.min.js", "res/js/content.js"]
+    }
+  ],
+  "browser_action": {
+  	"default_popup": "popup.html"
+  },
+
+  "permissions": [
+  	"https://myanimelist.net/",
+    "storage"
+  ]
+}
