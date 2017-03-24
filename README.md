@@ -14,6 +14,7 @@ Sites currently supported are:
 
 * Batoto
 * KissManga
+* MangaStream
 
 ## Disclaimer ##
 
