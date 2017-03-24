@@ -57,10 +57,14 @@ function create_mal_manga_xml(manga_volumes, manga_chapters) {
 function compare_manga_names(manga_name_1, manga_name_2) {
     var manga_1 = manga_name_1.replace(/[^a-zA-Z0-9]/g, '');
     var manga_2 = manga_name_2.replace(/[^a-zA-Z0-9]/g, '');
-
     if (manga_1.toLowerCase() === manga_2.toLowerCase())
         return true;
     return false;
+}
+
+//Returns a string that can be better used in search
+function search_query_string(name) {
+    return name.replace(/[^a-zA-Z0-9]/g, '%');
 }
 
 //Compare each manga synonym with the reader manga
@@ -93,12 +97,12 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
         });
         //If manga is not found in user's myanimelist then search for the manga on myanimelist
         if (!manga_found) {
-            var manga_search = mal_search_manga(mal_basicauth, manga_name);
+            var manga_search = mal_search_manga(mal_basicauth, search_query_string(manga_name));
             manga_search.then(function(data) {
                 //Look for manga on myanimelist
                 console.log(data);
                 $(data).find('entry').each(function() {
-                    if (!manga_found && (compare_manga_names($(this).find('title').text(), manga_name) || check_manga_synonyms($(this).find('synonyms').text(), manga_name))) {
+                    if (!manga_found && (compare_manga_names($(this).find('title').text(), manga_name) || compare_manga_names($(this).find('english').text(), manga_name) || check_manga_synonyms($(this).find('synonyms').text(), manga_name))) {
                         manga_id = parseInt($(this).find('id').text());
                         manga_found = true;
                         return false;
@@ -106,41 +110,42 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
                 });
                 //If manga is not found in myanimelist return
                 if (!manga_found) {
-                    console.log("Failed to find exact manga on myanimelist");
+                    console.error('Failed to find exact manga on myanimelist');
                     return;
                 }
                 //If manga is found on myanimelist, add it to user's myanimelist
                 var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
                 var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
                 manga_add.then(function(data) {
-                    console.log("Sucessfully added manga to myanimelist");
+                    console.log('Sucessfully added manga to myanimelist');
                     return;
                 }, function(data) {
-                    console.log("Manga already on your list ");
+                    console.error('Manga already on your list ');
                     return;
                 });
             }, function(data) {
-                console.log("Failed to find any matching manga on myanimelist");
+                console.log(data);
+                console.error('Failed to find any matching manga on myanimelist');
                 return;
             });
             return;
         }
         //If manga on user's myanimelist is progressed further than the current chapter being read, do not update
         if (manga_chapter <= manga_chapters_read || manga_volume < manga_volumes_read) {
-            console.log("Already read this");
+            console.error('Already read this');
             return;
         }
         var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
         var manga_update = mal_update_manga(mal_basicauth, manga_id, mal_manga_xml);
         manga_update.then(function(data) {
-            console.log("Sucessfully updated your manga myanimelist");
+            console.log('Sucessfully updated your manga myanimelist');
             return;
         }, function(data) {
-            console.log("Failed to update your manga myanimelist");
+            console.error('Failed to update your manga myanimelist');
             return;
         });
     }, function(data) {
-        console.log("Failed to get your manga list");
+        console.error('Failed to get your manga list');
         return;
     });
 }
@@ -148,8 +153,8 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
 //Get the name of the series as well as the current chapter from a batoto reader page
 function parse_batoto_manga_page(page_data) {
     if (window.location.hostname !== 'bato.to') {
-        console.log("Not Batoto");
-        return ["", 0, 0];
+        console.error('Not Batoto');
+        return ['', 0, 0];
     }
     var manga_name = $(page_data).find('a')[0].text;
     var manga_progress = $(page_data).find('option:selected')[0].text;
@@ -184,14 +189,14 @@ function batoto_mal_updater(mal_username, mal_basicauth, id, page)
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     })
     .fail(function(data) {
-        console.log('Failed to get manga data');
+        console.error('Failed to get manga data');
     });
 }
 
 //Update user's myanimelist when reading batoto
 function batoto_scrobbler(mal_username, mal_basicauth) {
     if (window.location.hash.length <= 1) {
-        console.log("Not on Batoto reader");
+        console.error('Not on Batoto reader');
         return;
     }
     var split = window.location.hash.substring(1).split('_');
@@ -213,40 +218,52 @@ function batoto_scrobbler(mal_username, mal_basicauth) {
 
 //Update user's myanimelist when reading kissmanga
 function kissmanga_scrobbler(mal_username, mal_basicauth) {
-    var split = window.location.pathname.substring(1).split('/');
+    //Gets rid of the last empty value if url ends in /
+    var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split.length != 3) {
-        console.log("Not on Kissmanga reader");
+        console.error('Not on Kissmanga reader');
         return;
     }
     var manga_name = split[1];
     //Old kissmanga chapters have different styling than newer ones
     var manga_chapter = parseInt(split[2].replace(/[^0-9.]/g, ''));
-    console.log(manga_name);
-    console.log(manga_chapter);
     //Kissmanga does not include volume
     update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
 }
 
+//Update user's myanimelist when reading mangastream
 function mangastream_scrobbler(mal_username, mal_basicauth) {
-    var split = window.location.pathname.substring(1).split('/');
+    //Gets rid of the last empty value if url ends in /
+    var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split[0] !== 'r') {
-        console.log("Not on Mangastream reader");
+        console.error('Not on Mangastream reader');
+        return;
+    }
+    var manga_name = $('span.hidden-xs.hidden-sm').text();
+    var manga_chapter = parseInt($('a.btn.btn-default.dropdown-toggle').text().replace(manga_name, ''));
+    //Mangastream does not include volume
+    update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+}
+
+//Update user's myanimelist when reading mangahere
+function mangahere_scrobbler(mal_username, mal_basicauth) {
+    //Gets rid of the last empty value if url ends in /
+    var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
+    if (split[0] !== 'manga' || split.length <= 2) {
+        console.error('Not on mangahere reader');
         return;
     }
     var manga_name = split[1];
-    var manga_chapter = 1;
-    if (manga_name === 'one_shot') {
-        manga_name = decodeURIComponent(split[2]);
-        console.log(manga_name);
-        console.log(manga_chapter);
+    var manga_volume = 0;
+    var manga_chapter = 0;
+    if (split.length === 3) {
+        manga_chapter = parseInt(split[2].replace('c',''));
     }
-    else {
-        manga_chapter = split[2];
-        console.log(manga_name);
-        console.log(manga_chapter);
+    else if (split.length === 4) {
+        manga_volume = parseInt(split[2].replace('v',''));
+        manga_chapter = parseInt(split[3].replace('c',''));
     }
-    //Mangastream does not include volume
-    update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+    update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
 }
 
 $(document).ready(function() {
@@ -266,6 +283,9 @@ $(document).ready(function() {
                 break;
             case 'mangastream.com':
                 mangastream_scrobbler(obj.mal_username, obj.mal_basicauth);
+                break;
+            case 'www.mangahere.co':
+                mangahere_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
             default:
                 console.log('Site unknown');
