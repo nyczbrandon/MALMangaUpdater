@@ -266,6 +266,19 @@ function mangahere_scrobbler(mal_username, mal_basicauth) {
     update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
 }
 
+//Update user's myanimelist when reading jaminisbox
+function jaiminisbox_scrobbler(mal_username, mal_basicauth) {
+    var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
+    if (split[0] !== 'reader' || split[1] !== 'read') {
+        console.error('Not on jamimisbox reader');
+        return;
+    }
+    var manga_name = $('title').text().split('::')[1];
+    var manga_volume = split[4];
+    var manga_chapter = split[5];
+    update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
+}
+
 $(document).ready(function() {
     chrome.storage.local.get(['mal_username', 'mal_basicauth'], function(obj) {
         if (chrome.runtime.lastError) {
@@ -286,6 +299,9 @@ $(document).ready(function() {
                 break;
             case 'www.mangahere.co':
                 mangahere_scrobbler(obj.mal_username, obj.mal_basicauth);
+                break;
+            case 'jaiminisbox.com':
+                jaiminisbox_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
             default:
                 console.log('Site unknown');
