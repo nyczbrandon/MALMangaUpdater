@@ -86,8 +86,10 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
         var manga_volumes_read = 0;
         var manga_chapters_read = 0;
         //Look for manga in user's myanimelist
+        //Priority for searing user's myanimelist
+        //Priority 1: Title
         $(data).find('manga').each(function() {
-            if (!manga_found && (compare_manga_names($(this).find('series_title').text(), manga_name) || check_manga_synonyms($(this).find('series_synonyms').text(), manga_name))) {
+            if (!manga_found && compare_manga_names($(this).find('series_title').text(), manga_name)) {
                 manga_id = parseInt($(this).find('series_mangadb_id').text());
                 manga_volumes_read = parseInt($(this).find('my_read_volumes').text());
                 manga_chapters_read = parseInt($(this).find('my_read_chapters').text());
@@ -95,19 +97,53 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
                 return false;
             }
         });
+        //Priority 2: Synonyms
+        if (!manga_found) {
+            $(data).find('manga').each(function() {
+                if (!manga_found && check_manga_synonyms($(this).find('series_synonyms').text(), manga_name)) {
+                    manga_id = parseInt($(this).find('series_mangadb_id').text());
+                    manga_volumes_read = parseInt($(this).find('my_read_volumes').text());
+                    manga_chapters_read = parseInt($(this).find('my_read_chapters').text());
+                    manga_found = true;
+                    return false;
+                }
+            });
+        }
         //If manga is not found in user's myanimelist then search for the manga on myanimelist
         if (!manga_found) {
             var manga_search = mal_search_manga(mal_basicauth, search_query_string(manga_name));
             manga_search.then(function(data) {
                 //Look for manga on myanimelist
                 console.log(data);
+                //Priority for searching manga
+                //Priority 1: Title
                 $(data).find('entry').each(function() {
-                    if (!manga_found && (compare_manga_names($(this).find('title').text(), manga_name) || compare_manga_names($(this).find('english').text(), manga_name) || check_manga_synonyms($(this).find('synonyms').text(), manga_name))) {
+                    if (!manga_found && compare_manga_names($(this).find('title').text(), manga_name)) {
                         manga_id = parseInt($(this).find('id').text());
                         manga_found = true;
                         return false;
                     }
                 });
+                //Priority 2: English
+                if (!manga_found) {
+                    $(data).find('entry').each(function() {
+                        if (!manga_found && compare_manga_names($(this).find('english').text(), manga_name)) {
+                            manga_id = parseInt($(this).find('id').text());
+                            manga_found = true;
+                            return false;
+                        }
+                    });
+                }
+                //Priority 3: Synonyms
+                if (!manga_found) {
+                    $(data).find('entry').each(function() {
+                        if (!manga_found && (check_manga_synonyms($(this).find('synonyms').text(), manga_name))) {
+                            manga_id = parseInt($(this).find('id').text());
+                            manga_found = true;
+                            return false;
+                        }
+                    });
+                }
                 //If manga is not found in myanimelist return
                 if (!manga_found) {
                     console.error('Failed to find exact manga on myanimelist');
