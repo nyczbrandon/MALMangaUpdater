@@ -15,6 +15,8 @@ Sites currently supported are:
 * Batoto
 * KissManga
 * MangaStream
+* MangaHere
+* Jaimini's Box
 
 ## Disclaimer ##
 

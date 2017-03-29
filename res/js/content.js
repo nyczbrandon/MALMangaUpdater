@@ -221,7 +221,7 @@ function kissmanga_scrobbler(mal_username, mal_basicauth) {
     //Gets rid of the last empty value if url ends in /
     var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split.length != 3) {
-        console.error('Not on Kissmanga reader');
+        console.error('Not on KissManga reader');
         return;
     }
     var manga_name = split[1];
@@ -236,7 +236,7 @@ function mangastream_scrobbler(mal_username, mal_basicauth) {
     //Gets rid of the last empty value if url ends in /
     var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split[0] !== 'r') {
-        console.error('Not on Mangastream reader');
+        console.error('Not on MangaStream reader');
         return;
     }
     var manga_name = $('span.hidden-xs.hidden-sm').text();
@@ -250,7 +250,7 @@ function mangahere_scrobbler(mal_username, mal_basicauth) {
     //Gets rid of the last empty value if url ends in /
     var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split[0] !== 'manga' || split.length <= 2) {
-        console.error('Not on mangahere reader');
+        console.error('Not on MangaHere reader');
         return;
     }
     var manga_name = split[1];
@@ -270,7 +270,7 @@ function mangahere_scrobbler(mal_username, mal_basicauth) {
 function jaiminisbox_scrobbler(mal_username, mal_basicauth) {
     var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
     if (split[0] !== 'reader' || split[1] !== 'read') {
-        console.error('Not on jamimisbox reader');
+        console.error('Not on Jaiminis Box reader');
         return;
     }
     var manga_name = $('title').text().split('::')[1];
@@ -294,6 +294,7 @@ $(document).ready(function() {
             case 'kissmanga.com':
                 kissmanga_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
+            case 'mangastream.com':
             case 'readms.net':
                 mangastream_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
