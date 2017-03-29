@@ -281,7 +281,7 @@ $(document).ready(function() {
             case 'kissmanga.com':
                 kissmanga_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
-            case 'mangastream.com':
+            case 'readms.net':
                 mangastream_scrobbler(obj.mal_username, obj.mal_basicauth);
                 break;
             case 'www.mangahere.co':
