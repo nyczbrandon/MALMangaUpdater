@@ -4,7 +4,7 @@ Mimi is an open-source browser extension that scrobbles what you are reading wit
 
 ## Installing ##
 
-* [Chrome Extension] (https://chrome.google.com/webstore/detail/mimi/paimnaijocbgecbipcfkomgmdmiccgii)
+* [Chrome Extension](https://chrome.google.com/webstore/detail/mimi/paimnaijocbgecbipcfkomgmdmiccgii)
 
 ## Information ##
 
