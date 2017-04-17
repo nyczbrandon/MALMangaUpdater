@@ -1,11 +1,22 @@
+body {
+    width: 300px;
+}
 label {
-	display: block;
+    display: block;
 }
 
 input {
-	display: block;
+    display: block;
 }
 
 #msg {
-	display: none;
+    display: none;
+}
+
+#bookmarks {
+    display: none;
+}
+
+li {
+    margin-bottom: 5px;
 }

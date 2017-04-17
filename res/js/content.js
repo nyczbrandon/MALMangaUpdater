@@ -8,7 +8,7 @@ function mal_get_manga_list(mal_username) {
         dataType: 'XML',
         data: {'u': mal_username, 'status': 'all', 'type': 'manga'}
     });
-}
+} 
 
 //AJAX request to add manga to user's myanimelist
 function mal_add_manga(mal_basicauth, manga_id, manga_xml) {
@@ -154,6 +154,7 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
                 var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
                 manga_add.then(function(data) {
                     console.log('Sucessfully added manga to myanimelist');
+		    save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
                     return;
                 }, function(data) {
                     console.error('Manga already on your list ');
@@ -175,7 +176,8 @@ function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga
         var manga_update = mal_update_manga(mal_basicauth, manga_id, mal_manga_xml);
         manga_update.then(function(data) {
             console.log('Sucessfully updated your manga myanimelist');
-            return;
+	    save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
+	    return;
         }, function(data) {
             console.error('Failed to update your manga myanimelist');
             return;
@@ -202,7 +204,75 @@ function parse_batoto_manga_page(page_data) {
         manga_volume = parseInt(manga_progress.split('Vol.')[1]);
     if (manga_progress.indexOf('Ch.') !== -1)
         manga_chapter = parseInt(manga_progress.split('Ch.')[1]);
-    return [manga_name, manga_volume, manga_chapter];
+    return [manga_name, manga_volume, manga_chapter]; 
+}
+
+
+//syncs bookmarks with MAL currently reading list
+//this function may be used in the future if/when
+//'dropping a manga' feature is added
+function sync_bookmarks(mal_username) {
+    var manga_list = mal_get_manga_list(mal_username);
+    manga_list.then(function(data) {
+	get_bookmarks(mal_username, function(bookmarks) {
+	    var mal_id_list = Set();
+	    $(data).find('manga').each(function() {
+		if($(this).find('my_status').text() !== '1')
+		    return;
+		var manga_id = parseInt($(this).find('series_mangadb_id').text());
+		mal_id_list.add(manga_id);
+	    });
+	    // have to traverse in reverse as we are deleting from the array as
+	    // we traverse it
+	    for (var i = bookmarks.length-1; i >= 0; i--) {
+		if (!mal_id_list.has(bookmarks[i].id)) {
+		    bookmarks.splice(i, 1);
+		    break;
+		}
+	    }
+	});
+    });
+}
+
+//gets bookmarks from local storage
+function get_bookmarks(mal_username, cb) {
+    chrome.storage.local.get('mimi_bookmarks_' + mal_username, function(items) {
+	if (chrome.runtime.lastError) {
+	    console.err(chrome.runtime.lastError);
+	    return;
+	}
+        if(!items || !items['mimi_bookmarks_' + mal_username]) {
+	    cb([]);
+	    return;
+	}
+	cb(items['mimi_bookmarks_' + mal_username]);
+    });
+}
+
+//saves bookmark with link to manga webpage to local storage
+function save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter) {
+    var bookmark_text = manga_name + ' Vol. ' + manga_volume + ' Ch. ' + manga_chapter;
+    get_bookmarks(mal_username, function(bookmarks) {  
+	var found = false; // does an old bookmark to the same manga exist
+	for (var i in bookmarks) {
+	    if (bookmarks[i].id == manga_id) {
+		bookmarks[i].link = window.location.href;
+		bookmarks[i].text = bookmark_text;
+		bookmarks[i].time = Date.now();
+		found = true;
+		break; 
+	    }
+	}
+	if(!found) {
+	    bookmarks.push({'id': manga_id, 'link': window.location.href, 'text': bookmark_text, 'time': Date.now()}); 
+	}
+	var prop_name = 'mimi_bookmarks_' + mal_username;
+	var update_dict = {};
+	update_dict[prop_name] = bookmarks;
+	chrome.storage.local.set(update_dict, function(){
+	    if(chrome.runtime.lastError) console.error(chrome.runtime.lastError);
+	});
+    });
 }
 
 //Update user's myanimelist using the current manga the batoto reader is currently on
@@ -321,6 +391,7 @@ $(document).ready(function() {
             console.error(chrome.runtime.lastError);
             return;
         }
+
         console.log(window.location.hostname);
         if (obj.mal_username && obj.mal_basicauth) {
             switch(window.location.hostname) {

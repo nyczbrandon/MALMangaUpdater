@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
   "name": "Mimi",
-  "version": "1.0.7",
+  "version": "1.1.0",
 
-  "description": "Update your MyAnimeList account's manga list automatically.",
+  "description": "Saves bookmarks to manga and updates your MyAnimeList account's manga list automatically.",
   "icons": { "128" : "res/images/mimi.png"},
 
   "content_scripts": [
@@ -17,7 +17,7 @@
   },
 
   "permissions": [
-  	"https://myanimelist.net/",
-    "storage"
+      "https://myanimelist.net/",
+      "storage"
   ]
 }
