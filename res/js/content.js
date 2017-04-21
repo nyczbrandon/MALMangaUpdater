@@ -170,7 +170,8 @@
                 return;
             }
             //If manga on user's myanimelist is progressed further than the current chapter being read, do not update
-            if (manga_chapter <= manga_chapters_read || manga_volume < manga_volumes_read) {
+            //Do not compare volumes as some sites do not include volumes
+            if (manga_chapter <= manga_chapters_read) {
                 console.error('Already read this');
                 return;
             }
