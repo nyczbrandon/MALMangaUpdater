@@ -2,10 +2,18 @@ label {
 	display: block;
 }
 
-input {
+input { 
 	display: block;
 }
 
-#msg {
+#msg { 
 	display: none;
+}
+
+#bookmarks {
+	display: none;
+}
+
+li {
+	margin-bottom: 5px;
 }
