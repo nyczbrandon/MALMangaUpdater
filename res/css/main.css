@@ -1,19 +1,19 @@
 label {
-    display: block;
+	display: block;
 }
 
-input {
-    display: block;
+input { 
+	display: block;
 }
 
-#msg {
-    display: none;
+#msg { 
+	display: none;
 }
 
 #bookmarks {
-    display: none;
+	display: none;
 }
 
 li {
-    margin-bottom: 5px;
+	margin-bottom: 5px;
 }
