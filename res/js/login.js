@@ -10,6 +10,7 @@ $(document).ready(function() {
     chrome.storage.local.get('mal_username', function(obj) {
         if (obj.mal_username)
         {
+	    $('body').css("width", "300px");
             $("#loginForm").css("display", "none");
             $("#msg").css("display", "block");
             $("#msg").text("Logged in as " + obj.mal_username);
