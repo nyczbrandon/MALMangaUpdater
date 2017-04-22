@@ -316,7 +316,7 @@
         batoto_mal_updater(mal_username, mal_basicauth, id, page);
         window.addEventListener('hashchange', function(event) {
             split = window.location.hash.substring(1).split('_');
-            if (id != split[0]) {
+            if (id !== split[0]) {
                 id = split[0];
                 if (split.length === 2)
                     page = split[1];
@@ -329,15 +329,27 @@
     function kissmanga_scrobbler(mal_username, mal_basicauth) {
         //Gets rid of the last empty value if url ends in /
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
-        if (split.length != 3) {
+        if (split.length !== 3) {
             console.error('Not on KissManga reader');
             return;
         }
         var manga_name = split[1];
+        var manga_status = $('#selectChapter option:selected').text().replace(manga_name, '');
         //Old kissmanga chapters have different styling than newer ones
-        var manga_chapter = parseInt(split[2].replace(/[^0-9.]/g, ''));
+        var manga_volume = 0;
+        var manga_chapter = 0;
+        if (manga_status.indexOf('Vol') !== -1)
+        	manga_volume = parseInt(manga_status.split('Vol')[1].replace(/[^0-9]/g, ' ').trim());
+       	if (manga_status.indexOf('Ch') !== -1)
+       		manga_chapter = parseInt(manga_status.split('Ch')[1].replace(/[^0-9]/g, ' ').trim());
+       	if (manga_volume === 0 && manga_chapter === 0)
+       		manga_chapter = parseInt(manga_status.replace(/[^0-9]/g, ' ').trim());
+       	if (manga_chapter === 0) {
+       		console.error('Cannot find chapter');
+       		return;
+       	}
         //Kissmanga does not include volume
-        update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+        update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
     //Update user's myanimelist when reading mangastream
