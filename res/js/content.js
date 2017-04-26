@@ -158,6 +158,11 @@
                     var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
                     manga_add.then(function(data) {
                         console.log('Sucessfully added manga to myanimelist');
+			chrome.runtime.sendMessage({
+			    type: 'mimi_add_manga' ,
+			    name: manga_name,
+			    id: manga_id 
+			});
                         save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
                         return;
                     }, function(data) {
