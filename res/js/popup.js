@@ -17,6 +17,7 @@ $(document).ready(function() {
     function display_bookmarks(mal_username) {
         var bookmarks_table = $('<table/>').css("list-style-type", "none").appendTo($("#bookmarks"));
         chrome.storage.local.get('mimi_bookmarks_' + mal_username, function(items) {
+            console.log(items);
             if (chrome.runtime.lastError) {
                 console.err(chrome.runtime.lastError);
                 return;

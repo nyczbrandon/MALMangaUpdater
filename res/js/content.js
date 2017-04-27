@@ -158,11 +158,11 @@
                     var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
                     manga_add.then(function(data) {
                         console.log('Sucessfully added manga to myanimelist');
-			chrome.runtime.sendMessage({
-			    type: 'mimi_add_manga' ,
-			    name: manga_name,
-			    id: manga_id 
-			});
+                        chrome.runtime.sendMessage({
+                            type: 'mimi_add_manga' ,
+                            name: manga_name,
+                            id: manga_id 
+                        });
                         save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
                         return;
                     }, function(data) {
@@ -225,7 +225,7 @@
             //get mal reading list
             manga_list.each(function() {
                 var status = $(this).find('my_status').text();
-                if(status !== '1' || status!== '3') // 1- currently reading, 2- on hold
+                if(status !== '1' && status !== '3') // 1- currently reading, 3- on hold
                     return;
                 var manga_id = parseInt($(this).find('series_mangadb_id').text());
                 mal_id_list.add(manga_id);
