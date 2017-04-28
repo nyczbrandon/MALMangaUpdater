@@ -11,12 +11,7 @@
       "matches": ["<all_urls>"],
       "js": ["lib/jquery/jquery-3.1.1.min.js", "res/js/content.js"]
     }
-  ], 
-
-  "background": {
-     "scripts": ["res/js/eventPage.js"],
-     "persistent": false
-  },
+  ],
 
   "browser_action": {
   	"default_popup": "popup.html"
@@ -25,6 +20,6 @@
   "permissions": [
       "https://myanimelist.net/",
       "storage",
-      "notifications" 
+      "notifications"
   ]
 }

@@ -1,5 +1,5 @@
 (function($) {
-    'use strict;';
+    'use strict';
 
     //AJAX request to get manga list of username
     function mal_get_manga_list(mal_username) {
@@ -96,9 +96,9 @@
                     manga_volumes_read = parseInt($(this).find('my_read_volumes').text());
                     manga_chapters_read = parseInt($(this).find('my_read_chapters').text());
                     manga_found = true;
-                    console.log("here");
                     return false;
                 }
+                return true;
             });
             //Priority 2: Synonyms
             if (!manga_found) {
@@ -108,9 +108,9 @@
                         manga_volumes_read = parseInt($(this).find('my_read_volumes').text());
                         manga_chapters_read = parseInt($(this).find('my_read_chapters').text());
                         manga_found = true;
-                        console.log("here");
                         return false;
                     }
+                    return true;
                 });
             }
             //If manga is not found in user's myanimelist then search for the manga on myanimelist
@@ -127,6 +127,7 @@
                             manga_found = true;
                             return false;
                         }
+                        return true;
                     });
                     //Priority 2: English
                     if (!manga_found) {
@@ -136,6 +137,7 @@
                                 manga_found = true;
                                 return false;
                             }
+                            return true;
                         });
                     }
                     //Priority 3: Synonyms
@@ -146,6 +148,7 @@
                                 manga_found = true;
                                 return false;
                             }
+                            return true;
                         });
                     }
                     //If manga is not found in myanimelist return
@@ -158,11 +161,6 @@
                     var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
                     manga_add.then(function(data) {
                         console.log('Sucessfully added manga to myanimelist');
-			chrome.runtime.sendMessage({
-			    type: 'mimi_add_manga' ,
-			    name: manga_name,
-			    id: manga_id 
-			});
                         save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
                         return;
                     }, function(data) {
@@ -225,10 +223,11 @@
             //get mal reading list
             manga_list.each(function() {
                 var status = $(this).find('my_status').text();
-                if(status !== '1' || status!== '3') // 1- currently reading, 2- on hold
-                    return;
+                if(status !== '1' && status!== '3') // 1- currently reading, 3- on hold
+                    return true;
                 var manga_id = parseInt($(this).find('series_mangadb_id').text());
                 mal_id_list.add(manga_id);
+                return true;
             });
             // delete the bookmarks not present on reading list
             bookmarks =  $.grep(bookmarks, (bookmark) => {
@@ -238,7 +237,8 @@
             var update_dict = {};
             update_dict[prop_name] = bookmarks;
             chrome.storage.local.set(update_dict, function(){
-                if(chrome.runtime.lastError) console.error(chrome.runtime.lastError);
+                if(chrome.runtime.lastError)
+                    console.error(chrome.runtime.lastError);
             });
         });
     }

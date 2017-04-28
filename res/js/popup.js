@@ -9,22 +9,28 @@ function sortByKey(array, key) {
 $(document).ready(function() {
 
     //AJAX request to change the status of a manga in the user's list
-    function mal_change_manga_status(mal_basicauth, manga_id, new_status) {
-        alert( 'manga id: ' + manga_id + ' ' + new_status );
-        return true;// request was successful (status 200)?
+    function mal_delete_manga(mal_basicauth, manga_id) {
+        return $.ajax({
+            url: 'https://myanimelist.net/api/mangalist/delete/' + manga_id + '.xml',
+            type: 'POST',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Authorization', 'Basic ' + mal_basicauth);
+            }
+        });
     }
 
     function display_bookmarks(mal_username) {
         var bookmarks_table = $('<table/>').css("list-style-type", "none").appendTo($("#bookmarks"));
-        chrome.storage.local.get('mimi_bookmarks_' + mal_username, function(items) {
+        var user_bookmarks = 'mimi_bookmarks_' + mal_username;
+        chrome.storage.local.get(user_bookmarks, function(items) {
             if (chrome.runtime.lastError) {
                 console.err(chrome.runtime.lastError);
                 return;
             }
-            if(!items || !items['mimi_bookmarks_' + mal_username]) {
+            if(!items || !items[user_bookmarks]) {
                 return;
             }
-            var bookmarks_sorted = sortByKey(items['mimi_bookmarks_' + mal_username], 'time');
+            var bookmarks_sorted = sortByKey(items[user_bookmarks], 'time');
             $.each(bookmarks_sorted, function() {
                 var tr = $('<tr/>')
                     .appendTo(bookmarks_table);
@@ -46,22 +52,31 @@ $(document).ready(function() {
                         .appendTo(button_cell)
                         .click(()=> {
                             chrome.storage.local.get('mal_basicauth', ({mal_basicauth})=> {
-                                var success = mal_change_manga_status(mal_basicauth, this.id, status);
-                                if(success) {
-                                    //remove table row
-                                    tr.remove();
-                                    //remove from local storage
-                                    var bookmarks =  $.grep(items['mimi_bookmarks_' + mal_username], (bookmark) => {
-                                        return bookmark.id !== this.id;
-                                    });
-                                    var prop_name = 'mimi_bookmarks_' + mal_username;
-                                    var update_dict = {};
-                                    update_dict[prop_name] = bookmarks;
-                                    chrome.storage.local.set(update_dict, function(){
-                                        if(chrome.runtime.lastError) console.error(chrome.runtime.lastError);
+                                var manga_id = this.id;
+                                if (status === 'drop') {
+                                    var drop_manga = mal_delete_manga(mal_basicauth, manga_id);
+                                    drop_manga.then(function() {
+                                        //Update bookmarks before dropping in case multiple drops at the same time
+                                        chrome.storage.local.get(user_bookmarks, function(items) {
+                                            //remove from local storage
+                                            var bookmarks =  $.grep(items[user_bookmarks], (bookmark) => {
+                                                return bookmark.id !== manga_id;
+                                            });
+                                            var prop_name = user_bookmarks;
+                                            var update_dict = {};
+                                            update_dict[prop_name] = bookmarks;
+                                            chrome.storage.local.set(update_dict, function(){
+                                                if(chrome.runtime.lastError)
+                                                    console.error(chrome.runtime.lastError);
+                                                //remove table row
+                                                tr.remove();
+                                            });
+                                        });
+                                    }, function() {
+                                        alert('Cannot reach MyAnimeList');
+                                        return;
                                     });
                                 }
-                                else alert('Cannot reach MyAnimelist');
                             });
                         });
                     });
