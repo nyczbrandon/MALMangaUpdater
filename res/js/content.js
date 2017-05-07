@@ -380,7 +380,7 @@
             console.error('Not on MangaHere reader');
             return;
         }
-        var manga_name = split[1];
+        var manga_name = $('.reader_tip > strong > a').text();
         var manga_volume = 0;
         var manga_chapter = 0;
         if (split.length === 3) {
