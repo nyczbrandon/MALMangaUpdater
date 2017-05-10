@@ -80,13 +80,13 @@
 
     //Update user's MyAnimelist
     function update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter) {
+        var manga_found = false;
+        var manga_id = 0;
+        var manga_volumes_read = 0;
+        var manga_chapters_read = 0;
         var manga_list = mal_get_manga_list(mal_username);
         manga_list.then(function(data) {
             sync_bookmarks_with_mal_list(mal_username, $(data).find('manga'));
-            var manga_found = false;
-            var manga_id = 0;
-            var manga_volumes_read = 0;
-            var manga_chapters_read = 0;
             //Look for manga in user's myanimelist
             //Priority for searing user's myanimelist
             //Priority 1: Title
@@ -116,6 +116,7 @@
             //If manga is not found in user's myanimelist then search for the manga on myanimelist
             if (!manga_found) {
                 var manga_search = mal_search_manga(mal_basicauth, search_query_string(manga_name));
+                var manga_image = '/res/images/mimi.png';
                 manga_search.then(function(data) {
                     //Look for manga on myanimelist
                     console.log(data);
@@ -124,6 +125,7 @@
                     $(data).find('entry').each(function() {
                         if (!manga_found && compare_manga_names($(this).find('title').text(), manga_name)) {
                             manga_id = parseInt($(this).find('id').text());
+                            manga_image = $(this).find('image').text();
                             manga_found = true;
                             return false;
                         }
@@ -134,6 +136,7 @@
                         $(data).find('entry').each(function() {
                             if (!manga_found && compare_manga_names($(this).find('english').text(), manga_name)) {
                                 manga_id = parseInt($(this).find('id').text());
+                                manga_image = $(this).find('image').text();
                                 manga_found = true;
                                 return false;
                             }
@@ -145,6 +148,7 @@
                         $(data).find('entry').each(function() {
                             if (!manga_found && (check_manga_synonyms($(this).find('synonyms').text(), manga_name))) {
                                 manga_id = parseInt($(this).find('id').text());
+                                manga_image = $(this).find('image').text();
                                 manga_found = true;
                                 return false;
                             }
@@ -156,16 +160,29 @@
                         console.error('Failed to find exact manga on myanimelist');
                         return;
                     }
-                    //If manga is found on myanimelist, add it to user's myanimelist
-                    var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
-                    var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
-                    manga_add.then(function(data) {
-                        console.log('Sucessfully added manga to myanimelist');
-                        save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
-                        return;
-                    }, function(data) {
-                        console.error('Manga already on your list ');
-                        return;
+                    //If manga is found on myanimelist, prompt user to add it to user's myanimelist
+                    chrome.runtime.sendMessage({
+                        type: 'mimi_add_manga',
+                        name: manga_name,
+                        image: manga_image
+                    }, (response) => {
+                        if (!response) {
+                            return;
+                        }
+                        if (response.response === 'Yes') {
+                            var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
+                            var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
+                            manga_add.then(function(data) {
+                                console.log('Sucessfully added manga to myanimelist');
+                                save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
+                                return;
+                            }, function(data) {
+                                console.error('Manga already on your list ');
+                                return;
+                            });
+                        }
+                        else if (response.response === 'No')
+                            console.log('Did not add manga');
                     });
                 }, function(data) {
                     console.log(data);
@@ -180,6 +197,9 @@
                 console.error('Already read this');
                 return;
             }
+            //If site does not have volume, grab volume from myanimelist just in case the volume count is higher on myanimelist
+            if (manga_volume < manga_volumes_read)
+                manga_volume = manga_volumes_read;
             var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
             var manga_update = mal_update_manga(mal_basicauth, manga_id, mal_manga_xml);
             manga_update.then(function(data) {
