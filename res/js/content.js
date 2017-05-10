@@ -161,28 +161,40 @@
                         return;
                     }
                     //If manga is found on myanimelist, prompt user to add it to user's myanimelist
-                    chrome.runtime.sendMessage({
-                        type: 'mimi_add_manga',
-                        name: manga_name,
-                        image: manga_image
-                    }, (response) => {
-                        if (!response) {
+                    var current_status = manga_name + ' Vol. ' + manga_volume + ' Ch. ' + manga_chapter;
+                    chrome.storage.local.get('last_notification', (obj) => {
+                        if (obj.last_notification === current_status) {
+                            console.log('Already sent notification for this chapter');
                             return;
                         }
-                        if (response.response === 'Yes') {
-                            var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
-                            var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
-                            manga_add.then(function(data) {
-                                console.log('Sucessfully added manga to myanimelist');
-                                save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
-                                return;
-                            }, function(data) {
-                                console.error('Manga already on your list ');
-                                return;
+                        else {
+                            chrome.storage.local.set({'last_notification': current_status}, () => {
+                                chrome.runtime.sendMessage({
+                                    type: 'mimi_add_manga',
+                                    name: manga_name,
+                                    image: manga_image
+                                }, (response) => {
+                                    if (!response) {
+                                        return;
+                                    }
+                                    if (response.response === 'Yes') {
+                                        var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter);
+                                        var manga_add = mal_add_manga(mal_basicauth, manga_id, mal_manga_xml);
+                                        manga_add.then(function(data) {
+                                            console.log('Sucessfully added manga to myanimelist');
+                                            save_bookmark(mal_username, manga_id, manga_name, manga_volume, manga_chapter);
+                                            return;
+                                        }, function(data) {
+                                            console.error('Manga already on your list ');
+                                            return;
+                                        });
+                                    }
+                                    else if (response.response === 'No') {
+                                        console.log('Did not add manga');
+                                    }
+                                });
                             });
                         }
-                        else if (response.response === 'No')
-                            console.log('Did not add manga');
                     });
                 }, function(data) {
                     console.log(data);
