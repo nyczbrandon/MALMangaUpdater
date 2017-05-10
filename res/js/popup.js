@@ -154,7 +154,7 @@ $(document).ready(function() {
                 }
         })
         .done(function(data) {
-            chrome.storage.local.set({'mal_username': mal_username, "mal_basicauth": mal_basicauth}, function() {
+            chrome.storage.local.set({'mal_username': mal_username, 'mal_basicauth': mal_basicauth}, function() {
                 logged_in(mal_username);
             });
         })
