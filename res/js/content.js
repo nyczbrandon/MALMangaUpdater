@@ -377,16 +377,15 @@
         var manga_volume = 0;
         var manga_chapter = 0;
         if (manga_status.indexOf('Vol') !== -1)
-                manga_volume = parseInt(manga_status.split('Vol')[1].replace(/[^0-9]/g, ' ').trim());
+            manga_volume = parseInt(manga_status.split('Vol')[1].replace(/[^0-9]/g, ' ').trim());
         if (manga_status.indexOf('Ch') !== -1)
-                manga_chapter = parseInt(manga_status.split('Ch')[1].replace(/[^0-9]/g, ' ').trim());
+            manga_chapter = parseInt(manga_status.split('Ch')[1].replace(/[^0-9]/g, ' ').trim());
         if (manga_volume === 0 && manga_chapter === 0)
-                manga_chapter = parseInt(manga_status.replace(/[^0-9]/g, ' ').trim());
+            manga_chapter = parseInt(manga_status.replace(/[^0-9]/g, ' ').trim());
         if (manga_chapter === 0) {
-                console.error('Cannot find chapter');
-                return;
+            console.error('Cannot find chapter');
+            return;
         }
-        //Kissmanga does not include volume
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
@@ -415,13 +414,9 @@
         var manga_name = $('.reader_tip > strong > a').text();
         var manga_volume = 0;
         var manga_chapter = 0;
-        if (split.length === 3) {
-            manga_chapter = parseInt(split[2].replace('c',''));
-        }
-        else if (split.length === 4) {
+        if (split[2].indexOf('v') !== -1)
             manga_volume = parseInt(split[2].replace('v',''));
-            manga_chapter = parseInt(split[3].replace('c',''));
-        }
+        manga_chapter = parseInt($('section.readpage_top').find('div.title > h1 > a').text().split(manga_name)[1].trim());
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
