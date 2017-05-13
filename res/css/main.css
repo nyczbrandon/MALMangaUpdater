@@ -2,12 +2,16 @@ label {
 	display: block;
 }
 
-input { 
+input {
 	display: block;
 }
 
-#msg { 
+#msg {
 	display: none;
+}
+
+#logout {
+    display: none;
 }
 
 #bookmarks {
