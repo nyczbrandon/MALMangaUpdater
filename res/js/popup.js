@@ -58,7 +58,7 @@ $(document).ready(function() {
     }
 
     function display_bookmarks(mal_username) {
-        var bookmarks_table = $('<table/>').css("list-style-type", "none").appendTo($("#bookmarks"));
+        var bookmarks_table = $('<table/>').css('list-style-type', 'none').appendTo($('#bookmarks'));
         var user_bookmarks = 'mimi_bookmarks_' + mal_username;
         chrome.storage.local.get(user_bookmarks, function(items) {
             if (chrome.runtime.lastError) {
@@ -82,7 +82,7 @@ $(document).ready(function() {
                         chrome.tabs.create({url: this.link});
                         return false;
                     });
-                $.each(['delete', 'drop', 'completed'], (_, status )=>{
+                $.each(['Delete', 'Drop', 'Complete'], (_, status )=>{
                     var button_cell = $('<td/>')
                         .appendTo(tr);
                     var button = $('<button/>')
@@ -93,7 +93,7 @@ $(document).ready(function() {
                                 var manga_id = this.id;
                                 var manga_volume = parseInt(this.text.split('Vol. ')[1]);
                                 var manga_chapter = parseInt(this.text.split('Ch. ')[1]);
-                                if (status === 'delete') {
+                                if (status === 'Delete') {
                                     var delete_manga = mal_delete_manga(mal_basicauth, manga_id);
                                     delete_manga.then(function() {
                                         update_bookmarks(user_bookmarks, manga_id, tr);
@@ -105,9 +105,9 @@ $(document).ready(function() {
                                 else {
                                     var manga_status = 1;
                                     //Status number for drop is 4 and completed is 2
-                                    if (status === 'drop')
+                                    if (status === 'Drop')
                                         manga_status = 4;
-                                    else if (status === 'completed')
+                                    else if (status === 'Complete')
                                         manga_status = 2;
                                     var mal_manga_xml = create_mal_manga_xml(manga_volume, manga_chapter, manga_status);
                                     var update_manga = mal_update_manga(mal_basicauth, manga_id, mal_manga_xml);
@@ -127,40 +127,68 @@ $(document).ready(function() {
     }
 
     function logged_in(mal_username) {
-        $('body').css("width", "350px");
-        $("#loginForm").css("display", "none");
-        $("#msg").css("display", "block");
-        $("#msg").text("Logged in as " + mal_username);
-        $("#bookmarks").css("display", "block");
+        $('body').css('width', '350px');
+        $('#loginForm').css('display', 'none');
+        $('#msg').css('display', 'inline');
+        $('#msg').text('Logged in as ' + mal_username);
+        $('#logout').css('display', 'inline');
+        $('#bookmarks').css('display', 'block');
         display_bookmarks(mal_username);
     }
 
+    function logged_out() {
+        $('body').removeAttr('style');
+        $('#loginForm').removeAttr('style');
+        $('#msg').removeAttr('style');
+        $('#msg').text('Message');
+        $('#logout').removeAttr('style');
+        $('#bookmarks').removeAttr('style');
+        $('#bookmarks table').remove();
+    }
+
     chrome.storage.local.get('mal_username', function(obj) {
-        if (obj.mal_username) {
-            logged_in(obj.mal_username);
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            return;
         }
+        if (obj.mal_username)
+            logged_in(obj.mal_username);
     });
 
-    $("#login").click(function() {
-        var mal_username = $("#username").val();
-        var mal_password = $("#password").val();
-        var mal_basicauth = btoa(mal_username + ":" + mal_password);
+    $('#login').click(() => {
+        var mal_username = $('#username').val();
+        var mal_password = $('#password').val();
+        var mal_basicauth = btoa(mal_username + ':' + mal_password);
         $.ajax({
-            url: "https://myanimelist.net/api/account/verify_credentials.xml",
-            type: "GET",
-            dataType: "XML",
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Basic " + mal_basicauth);
+            url: 'https://myanimelist.net/api/account/verify_credentials.xml',
+            type: 'GET',
+            dataType: 'XML',
+            beforeSend: (xhr) => {
+                xhr.setRequestHeader('Authorization', 'Basic ' + mal_basicauth);
                 }
         })
-        .done(function(data) {
-            chrome.storage.local.set({'mal_username': mal_username, 'mal_basicauth': mal_basicauth}, function() {
+        .done((data) => {
+            chrome.storage.local.set({'mal_username': mal_username, 'mal_basicauth': mal_basicauth}, () => {
+                if (chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError);
+                    return;
+                }
                 logged_in(mal_username);
             });
         })
-        .fail(function(data) {
-            $("#msg").css("display", "block");
-            $("#msg").text("Failed to log in.");
+        .fail((data) => {
+            $('#msg').css('display', 'block');
+            $('#msg').text('Failed to log in.');
+        });
+    });
+
+    $('#logout').click(() => {
+        chrome.storage.local.remove(['mal_username', 'mal_basicauth'], () => {
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError);
+                return;
+            }
+            logged_out();
         });
     });
 });
