@@ -17,6 +17,7 @@ Sites currently supported are:
 * MangaStream
 * MangaHere
 * Jaimini's Box
+* MangaSee
 
 ## Disclaimer ##
 

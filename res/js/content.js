@@ -433,6 +433,19 @@
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
+    //Update user's myanimelist when reading mangasee
+    function mangasee_scrobbler(mal_username, mal_basicauth) {
+        var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
+        if (split[0] !== 'read-online') {
+            console.error('Not on mangasee reader');
+            return;
+        }
+        var manga_name = $('input.SeriesName').val();
+        var manga_chapter = parseInt($('span.CurChapter').first().text());
+        //Mangasee does not include volume
+        update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+    }
+
     $(document).ready(function() {
         chrome.storage.local.get(['mal_username', 'mal_basicauth'], function(obj) {
             if (chrome.runtime.lastError) {
@@ -457,6 +470,9 @@
                     break;
                 case 'jaiminisbox.com':
                     jaiminisbox_scrobbler(obj.mal_username, obj.mal_basicauth);
+                    break;
+                case 'mangaseeonline.us':
+                    mangasee_scrobbler(obj.mal_username, obj.mal_basicauth);
                     break;
                 default:
                     console.log('Site unknown');
