@@ -446,7 +446,22 @@
         update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
     }
 
-    $(document).ready(function() {
+    //Update user's myanimelsit when reading mangapanda
+    function mangapanda_scrobbler(mal_username, mal_basicauth) {
+        var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
+        //If split is on reader it should have manga name and chapter name so length is at least 2
+        //Length check does not work when on special pages such as advanced search, popular manga, manga list, latest releases
+        if (split.length < 2 || split[0] === 'search' || split[0] === 'popular' || split[0] === 'alphabetical' || split[0] == 'latest') {
+            console.error('Not on mangapanda reader');
+            return;
+        }
+        var manga_name = $('#mangainfo_son a strong').eq(1).text();
+        var manga_chapter = parseInt($('#mangainfo h1').text().replace(manga_name, '').trim());
+        //Mangapanda does not include volume
+        update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+    }
+
+    $(document).ready(() => {
         chrome.storage.local.get(['mal_username', 'mal_basicauth'], function(obj) {
             if (chrome.runtime.lastError) {
                 console.error(chrome.runtime.lastError);
@@ -473,6 +488,9 @@
                     break;
                 case 'mangaseeonline.us':
                     mangasee_scrobbler(obj.mal_username, obj.mal_basicauth);
+                    break;
+                case 'www.mangapanda.com':
+                    mangapanda_scrobbler(obj.mal_username, obj.mal_basicauth);
                     break;
                 default:
                     console.log('Site unknown');
