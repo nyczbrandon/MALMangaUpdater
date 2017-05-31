@@ -19,6 +19,7 @@ Sites currently supported are:
 * Jaimini's Box
 * MangaSee
 * MangaPanda
+* MangaReader
 
 ## Disclaimer ##
 

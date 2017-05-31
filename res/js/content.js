@@ -340,7 +340,7 @@
         });
     }
 
-    //Update user's myanimelist when reading batoto
+    //Update user's myanimelist when reading Batoto
     function batoto_scrobbler(mal_username, mal_basicauth) {
         if (window.location.hash.length <= 1) {
             console.error('Not on Batoto reader');
@@ -363,7 +363,7 @@
         });
     }
 
-    //Update user's myanimelist when reading kissmanga
+    //Update user's myanimelist when reading KissManga
     function kissmanga_scrobbler(mal_username, mal_basicauth) {
         //Gets rid of the last empty value if url ends in /
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
@@ -389,7 +389,7 @@
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
-    //Update user's myanimelist when reading mangastream
+    //Update user's myanimelist when reading MangaStream
     function mangastream_scrobbler(mal_username, mal_basicauth) {
         //Gets rid of the last empty value if url ends in /
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
@@ -403,7 +403,7 @@
         update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
     }
 
-    //Update user's myanimelist when reading mangahere
+    //Update user's myanimelist when reading MangaHere
     function mangahere_scrobbler(mal_username, mal_basicauth) {
         //Gets rid of the last empty value if url ends in /
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
@@ -420,7 +420,7 @@
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
-    //Update user's myanimelist when reading jaminisbox
+    //Update user's myanimelist when reading JaminisBox
     function jaiminisbox_scrobbler(mal_username, mal_basicauth) {
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
         if (split[0] !== 'reader' || split[1] !== 'read') {
@@ -433,33 +433,49 @@
         update_mal(mal_username, mal_basicauth, manga_name, manga_volume, manga_chapter);
     }
 
-    //Update user's myanimelist when reading mangasee
+    //Update user's myanimelist when reading MangaSee
     function mangasee_scrobbler(mal_username, mal_basicauth) {
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
         if (split[0] !== 'read-online') {
-            console.error('Not on mangasee reader');
+            console.error('Not on MangaSee reader');
             return;
         }
         var manga_name = $('input.SeriesName').val();
         var manga_chapter = parseInt($('span.CurChapter').first().text());
-        //Mangasee does not include volume
+        //MangaSee does not include volume
         update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
     }
 
-    //Update user's myanimelsit when reading mangapanda
+    //Update user's myanimelsit when reading MangaPanda
     function mangapanda_scrobbler(mal_username, mal_basicauth) {
         var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
         //If split is on reader it should have manga name and chapter name so length is at least 2
         //Length check does not work when on special pages such as advanced search, popular manga, manga list, latest releases
         if (split.length < 2 || split[0] === 'search' || split[0] === 'popular' || split[0] === 'alphabetical' || split[0] == 'latest') {
-            console.error('Not on mangapanda reader');
+            console.error('Not on MangaPanda reader');
             return;
         }
         var manga_name = $('#mangainfo_son a strong').eq(1).text();
         var manga_chapter = parseInt($('#mangainfo h1').text().replace(manga_name, '').trim());
-        //Mangapanda does not include volume
+        //MangaPanda does not include volume
         update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
     }
+
+    //Update user's myanimelist when reading MangaReader
+    function mangareader_scrobbler(mal_username, mal_basicauth) {
+        var split = window.location.pathname.substring(1).split('/').filter(function(e){return e;});
+        //If split is on reader it should have manga name and chapter name so length is at least 2
+        //Length check does not work when on special pages such as advanced search, popular manga, manga list, latest releases
+        if (split.length < 2 || split[0] === 'search' || split[0] === 'popular' || split[0] === 'alphabetical' || split[0] == 'latest') {
+            console.error('Not on MangaReader reader');
+            return;
+        }
+        var manga_name = $('#mangainfo_son a strong').eq(1).text();
+        var manga_chapter = parseInt($('#mangainfo h1').text().replace(manga_name, '').trim());
+        //MangaReader does not include volume
+        update_mal(mal_username, mal_basicauth, manga_name, 0, manga_chapter);
+    }
+    //MangaPanda and Mangareader are copies of each other but I made two different functions in case they stop being copies lol
 
     $(document).ready(() => {
         chrome.storage.local.get(['mal_username', 'mal_basicauth'], function(obj) {
@@ -491,6 +507,9 @@
                     break;
                 case 'www.mangapanda.com':
                     mangapanda_scrobbler(obj.mal_username, obj.mal_basicauth);
+                    break;
+                case 'www.mangareader.net':
+                    mangareader_scrobbler(obj.mal_username, obj.mal_basicauth);
                     break;
                 default:
                     console.log('Site unknown');
